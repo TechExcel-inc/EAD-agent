@@ -44,8 +44,8 @@ class ContextReference:
     target: str
     start: int
     end: int
-    line_start: int | None = None
-    line_end: int | None = None
+    line_start: Optional[int] = None
+    line_end: Optional[int] = None
 
 
 @dataclass
@@ -108,7 +108,7 @@ def preprocess_context_references(
     cwd: str | Path,
     context_length: int,
     url_fetcher: Callable[[str], str | Awaitable[str]] | None = None,
-    allowed_root: str | Path | None = None,
+    allowed_root: str | Optional[Path] = None,
 ) -> ContextReferenceResult:
     coro = preprocess_context_references_async(
         message,
@@ -135,7 +135,7 @@ async def preprocess_context_references_async(
     cwd: str | Path,
     context_length: int,
     url_fetcher: Callable[[str], str | Awaitable[str]] | None = None,
-    allowed_root: str | Path | None = None,
+    allowed_root: str | Optional[Path] = None,
 ) -> ContextReferenceResult:
     refs = parse_context_references(message)
     if not refs:
@@ -208,8 +208,8 @@ async def _expand_reference(
     cwd: Path,
     *,
     url_fetcher: Callable[[str], str | Awaitable[str]] | None = None,
-    allowed_root: Path | None = None,
-) -> tuple[str | None, str | None]:
+    allowed_root: Optional[Path] = None,
+) -> tuple[Optional[str], Optional[str]]:
     try:
         if ref.kind == "file":
             return _expand_file_reference(ref, cwd, allowed_root=allowed_root)
@@ -237,8 +237,8 @@ def _expand_file_reference(
     ref: ContextReference,
     cwd: Path,
     *,
-    allowed_root: Path | None = None,
-) -> tuple[str | None, str | None]:
+    allowed_root: Optional[Path] = None,
+) -> tuple[Optional[str], Optional[str]]:
     path = _resolve_path(cwd, ref.target, allowed_root=allowed_root)
     _ensure_reference_path_allowed(path)
     if not path.exists():
@@ -264,8 +264,8 @@ def _expand_folder_reference(
     ref: ContextReference,
     cwd: Path,
     *,
-    allowed_root: Path | None = None,
-) -> tuple[str | None, str | None]:
+    allowed_root: Optional[Path] = None,
+) -> tuple[Optional[str], Optional[str]]:
     path = _resolve_path(cwd, ref.target, allowed_root=allowed_root)
     _ensure_reference_path_allowed(path)
     if not path.exists():
@@ -282,7 +282,7 @@ def _expand_git_reference(
     cwd: Path,
     args: list[str],
     label: str,
-) -> tuple[str | None, str | None]:
+) -> tuple[Optional[str], Optional[str]]:
     try:
         result = subprocess.run(
             ["git", *args],
@@ -326,7 +326,7 @@ async def _default_url_fetcher(url: str) -> str:
     return str(doc.get("content") or doc.get("raw_content") or "").strip()
 
 
-def _resolve_path(cwd: Path, target: str, *, allowed_root: Path | None = None) -> Path:
+def _resolve_path(cwd: Path, target: str, *, allowed_root: Optional[Path] = None) -> Path:
     path = Path(os.path.expanduser(target))
     if not path.is_absolute():
         path = cwd / path
@@ -378,7 +378,7 @@ def _strip_reference_wrappers(value: str) -> str:
     return value
 
 
-def _parse_file_reference_value(value: str) -> tuple[str, int | None, int | None]:
+def _parse_file_reference_value(value: str) -> tuple[str, Optional[int], Optional[int]]:
     quoted_match = re.match(
         r'^(?P<quote>`|"|\')(?P<path>.+?)(?P=quote)(?::(?P<start>\d+)(?:-(?P<end>\d+))?)?$',
         value,

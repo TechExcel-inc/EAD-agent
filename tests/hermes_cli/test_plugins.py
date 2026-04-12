@@ -28,7 +28,7 @@ from hermes_cli.plugins import (
 
 
 def _make_plugin_dir(base: Path, name: str, *, register_body: str = "pass",
-                     manifest_extra: dict | None = None) -> Path:
+                     manifest_extra: Optional[dict] = None) -> Path:
     """Create a minimal plugin directory with plugin.yaml + __init__.py."""
     plugin_dir = base / name
     plugin_dir.mkdir(parents=True, exist_ok=True)

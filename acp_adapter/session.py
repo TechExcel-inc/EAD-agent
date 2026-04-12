@@ -422,10 +422,10 @@ class SessionManager:
         *,
         session_id: str,
         cwd: str,
-        model: str | None = None,
-        requested_provider: str | None = None,
-        base_url: str | None = None,
-        api_mode: str | None = None,
+        model: Optional[str] = None,
+        requested_provider: Optional[str] = None,
+        base_url: Optional[str] = None,
+        api_mode: Optional[str] = None,
     ):
         if self._agent_factory is not None:
             return self._agent_factory()

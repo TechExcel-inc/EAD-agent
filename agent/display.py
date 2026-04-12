@@ -34,7 +34,7 @@ _MAX_INLINE_DIFF_LINES = 80
 class LocalEditSnapshot:
     """Pre-tool filesystem snapshot used to render diffs locally after writes."""
     paths: list[Path] = field(default_factory=list)
-    before: dict[str, str | None] = field(default_factory=dict)
+    before: dict[str, Optional[str]] = field(default_factory=dict)
 
 # =========================================================================
 # Configurable tool preview length (0 = no limit)
@@ -110,7 +110,7 @@ def _oneline(text: str) -> str:
     return " ".join(text.split())
 
 
-def build_tool_preview(tool_name: str, args: dict, max_len: int | None = None) -> str | None:
+def build_tool_preview(tool_name: str, args: dict, max_len: Optional[int] = None) -> Optional[str]:
     """Build a short preview of a tool call's primary argument for display.
 
     *max_len* controls truncation.  ``None`` (default) defers to the global
@@ -229,7 +229,7 @@ def _resolved_path(path: str) -> Path:
     return Path.cwd() / candidate
 
 
-def _snapshot_text(path: Path) -> str | None:
+def _snapshot_text(path: Path) -> Optional[str]:
     """Return UTF-8 file content, or None for missing/unreadable files."""
     try:
         return path.read_text(encoding="utf-8")
@@ -275,7 +275,7 @@ def _resolve_skill_manage_paths(args: dict) -> list[Path]:
     return []
 
 
-def _resolve_local_edit_paths(tool_name: str, function_args: dict | None) -> list[Path]:
+def _resolve_local_edit_paths(tool_name: str, function_args: Optional[dict]) -> list[Path]:
     """Resolve local filesystem targets for write-capable tools."""
     if not isinstance(function_args, dict):
         return []
@@ -294,7 +294,7 @@ def _resolve_local_edit_paths(tool_name: str, function_args: dict | None) -> lis
     return []
 
 
-def capture_local_edit_snapshot(tool_name: str, function_args: dict | None) -> LocalEditSnapshot | None:
+def capture_local_edit_snapshot(tool_name: str, function_args: Optional[dict]) -> LocalEditSnapshot | None:
     """Capture before-state for local write previews."""
     paths = _resolve_local_edit_paths(tool_name, function_args)
     if not paths:
@@ -306,7 +306,7 @@ def capture_local_edit_snapshot(tool_name: str, function_args: dict | None) -> L
     return snapshot
 
 
-def _result_succeeded(result: str | None) -> bool:
+def _result_succeeded(result: Optional[str]) -> bool:
     """Conservatively detect whether a tool result represents success."""
     if not result:
         return False
@@ -323,7 +323,7 @@ def _result_succeeded(result: str | None) -> bool:
     return True
 
 
-def _diff_from_snapshot(snapshot: LocalEditSnapshot | None) -> str | None:
+def _diff_from_snapshot(snapshot: LocalEditSnapshot | None) -> Optional[str]:
     """Generate unified diff text from a stored before-state and current files."""
     if not snapshot:
         return None
@@ -354,11 +354,11 @@ def _diff_from_snapshot(snapshot: LocalEditSnapshot | None) -> str | None:
 
 def extract_edit_diff(
     tool_name: str,
-    result: str | None,
+    result: Optional[str],
     *,
-    function_args: dict | None = None,
+    function_args: Optional[dict] = None,
     snapshot: LocalEditSnapshot | None = None,
-) -> str | None:
+) -> Optional[str]:
     """Extract a unified diff from a file-edit tool result."""
     if tool_name == "patch" and result:
         try:
@@ -488,9 +488,9 @@ def _summarize_rendered_diff_sections(
 
 def render_edit_diff_with_delta(
     tool_name: str,
-    result: str | None,
+    result: Optional[str],
     *,
-    function_args: dict | None = None,
+    function_args: Optional[dict] = None,
     snapshot: LocalEditSnapshot | None = None,
     print_fn=None,
 ) -> bool:
@@ -707,7 +707,7 @@ class KawaiiSpinner:
 # Cute tool message (completion line that replaces the spinner)
 # =========================================================================
 
-def _detect_tool_failure(tool_name: str, result: str | None) -> tuple[bool, str]:
+def _detect_tool_failure(tool_name: str, result: Optional[str]) -> tuple[bool, str]:
     """Inspect a tool result string for signs of failure.
 
     Returns ``(is_failure, suffix)`` where *suffix* is an informational tag
@@ -745,7 +745,7 @@ def _detect_tool_failure(tool_name: str, result: str | None) -> tuple[bool, str]
 
 
 def get_cute_tool_message(
-    tool_name: str, args: dict, duration: float, result: str | None = None,
+    tool_name: str, args: dict, duration: float, result: Optional[str] = None,
 ) -> str:
     """Generate a formatted tool completion line for CLI quiet mode.
 

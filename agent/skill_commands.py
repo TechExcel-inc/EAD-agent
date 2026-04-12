@@ -42,7 +42,7 @@ def build_plan_path(
     return Path(".hermes") / "plans" / f"{timestamp}-{slug}.md"
 
 
-def _load_skill_payload(skill_identifier: str, task_id: str | None = None) -> tuple[dict[str, Any], Path | None, str] | None:
+def _load_skill_payload(skill_identifier: str, task_id: Optional[str] = None) -> tuple[dict[str, Any], Optional[Path], str] | None:
     """Load a skill by name/path and return (loaded_payload, skill_dir, display_name)."""
     raw_identifier = (skill_identifier or "").strip()
     if not raw_identifier:
@@ -120,7 +120,7 @@ def _inject_skill_config(loaded_skill: dict[str, Any], parts: list[str]) -> None
 
 def _build_skill_message(
     loaded_skill: dict[str, Any],
-    skill_dir: Path | None,
+    skill_dir: Optional[Path],
     activation_note: str,
     user_instruction: str = "",
     runtime_note: str = "",
@@ -291,7 +291,7 @@ def resolve_skill_command_key(command: str) -> Optional[str]:
 def build_skill_invocation_message(
     cmd_key: str,
     user_instruction: str = "",
-    task_id: str | None = None,
+    task_id: Optional[str] = None,
     runtime_note: str = "",
 ) -> Optional[str]:
     """Build the user message content for a skill slash command invocation.
@@ -328,7 +328,7 @@ def build_skill_invocation_message(
 
 def build_preloaded_skills_prompt(
     skill_identifiers: list[str],
-    task_id: str | None = None,
+    task_id: Optional[str] = None,
 ) -> tuple[str, list[str], list[str]]:
     """Load one or more skills for session-wide CLI preloading.
 

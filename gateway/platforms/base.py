@@ -56,7 +56,7 @@ def is_network_accessible(host: str) -> bool:
         return True
 
 
-def _detect_macos_system_proxy() -> str | None:
+def _detect_macos_system_proxy() -> Optional[str]:
     """Read the macOS system HTTP(S) proxy via ``scutil --proxy``.
 
     Returns an ``http://host:port`` URL string if an HTTP or HTTPS proxy is
@@ -92,7 +92,7 @@ def _detect_macos_system_proxy() -> str | None:
     return None
 
 
-def resolve_proxy_url(platform_env_var: str | None = None) -> str | None:
+def resolve_proxy_url(platform_env_var: Optional[str] = None) -> Optional[str]:
     """Return a proxy URL from env vars, or macOS system proxy.
 
     Check order:
@@ -114,7 +114,7 @@ def resolve_proxy_url(platform_env_var: str | None = None) -> str | None:
     return _detect_macos_system_proxy()
 
 
-def proxy_kwargs_for_bot(proxy_url: str | None) -> dict:
+def proxy_kwargs_for_bot(proxy_url: Optional[str]) -> dict:
     """Build kwargs for ``commands.Bot()`` / ``discord.Client()`` with proxy.
 
     Returns:
@@ -144,7 +144,7 @@ def proxy_kwargs_for_bot(proxy_url: str | None) -> dict:
     return {"proxy": proxy_url}
 
 
-def proxy_kwargs_for_aiohttp(proxy_url: str | None) -> tuple[dict, dict]:
+def proxy_kwargs_for_aiohttp(proxy_url: Optional[str]) -> tuple[dict, dict]:
     """Build kwargs for standalone ``aiohttp.ClientSession`` with proxy.
 
     Returns ``(session_kwargs, request_kwargs)`` where:

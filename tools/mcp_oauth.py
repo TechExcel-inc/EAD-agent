@@ -82,7 +82,7 @@ class OAuthNonInteractiveError(RuntimeError):
 
 # Port used by the most recent build_oauth_auth() call.  Exposed so that
 # tests can verify the callback server and the redirect_uri share a port.
-_oauth_port: int | None = None
+_oauth_port: Optional[int] = None
 
 
 # ---------------------------------------------------------------------------
@@ -143,7 +143,7 @@ def _can_open_browser() -> bool:
     return False
 
 
-def _read_json(path: Path) -> dict | None:
+def _read_json(path: Path) -> Optional[dict]:
     """Read a JSON file, returning None if it doesn't exist or is invalid."""
     if not path.exists():
         return None
@@ -309,7 +309,7 @@ async def _redirect_handler(authorization_url: str) -> None:
         print("  (Headless environment detected — open the URL manually.)\n", file=sys.stderr)
 
 
-async def _wait_for_callback() -> tuple[str, str | None]:
+async def _wait_for_callback() -> tuple[str, Optional[str]]:
     """Wait for the OAuth callback to arrive on the local callback server.
 
     Uses the module-level ``_oauth_port`` which is set by ``build_oauth_auth``
@@ -378,7 +378,7 @@ def remove_oauth_tokens(server_name: str) -> None:
 def build_oauth_auth(
     server_name: str,
     server_url: str,
-    oauth_config: dict | None = None,
+    oauth_config: Optional[dict] = None,
 ) -> "OAuthClientProvider | None":
     """Build an ``httpx.Auth``-compatible OAuth handler for an MCP server.
 

@@ -275,7 +275,7 @@ def _profile_suffix() -> str:
     return hashlib.sha256(str(home).encode()).hexdigest()[:8]
 
 
-def _profile_arg(hermes_home: str | None = None) -> str:
+def _profile_arg(hermes_home: Optional[str] = None) -> str:
     """Return ``--profile <name>`` only when HERMES_HOME is a named profile.
 
     For ``~/.hermes/profiles/<name>``, returns ``"--profile <name>"``.
@@ -397,7 +397,7 @@ def _require_root_for_system_service(action: str) -> None:
         sys.exit(1)
 
 
-def _system_service_identity(run_as_user: str | None = None) -> tuple[str, str, str]:
+def _system_service_identity(run_as_user: Optional[str] = None) -> tuple[str, str, str]:
     import getpass
     import grp
     import pwd
@@ -420,7 +420,7 @@ def _system_service_identity(run_as_user: str | None = None) -> tuple[str, str, 
     return username, group_name, user_info.pw_dir
 
 
-def _read_systemd_user_from_unit(unit_path: Path) -> str | None:
+def _read_systemd_user_from_unit(unit_path: Path) -> Optional[str]:
     if not unit_path.exists():
         return None
 
@@ -431,14 +431,14 @@ def _read_systemd_user_from_unit(unit_path: Path) -> str | None:
     return None
 
 
-def _default_system_service_user() -> str | None:
+def _default_system_service_user() -> Optional[str]:
     for candidate in (os.getenv("SUDO_USER"), os.getenv("USER"), os.getenv("LOGNAME")):
         if candidate and candidate.strip() and candidate.strip() != "root":
             return candidate.strip()
     return None
 
 
-def prompt_linux_gateway_install_scope() -> str | None:
+def prompt_linux_gateway_install_scope() -> Optional[str]:
     choice = prompt_choice(
         "  Choose how the gateway should run in the background:",
         [
@@ -451,7 +451,7 @@ def prompt_linux_gateway_install_scope() -> str | None:
     return {0: "user", 1: "system", 2: None}[choice]
 
 
-def install_linux_gateway_from_setup(force: bool = False) -> tuple[str | None, bool]:
+def install_linux_gateway_from_setup(force: bool = False) -> tuple[Optional[str], bool]:
     scope = prompt_linux_gateway_install_scope()
     if scope is None:
         return None, False
@@ -482,7 +482,7 @@ def install_linux_gateway_from_setup(force: bool = False) -> tuple[str | None, b
     return scope, True
 
 
-def get_systemd_linger_status() -> tuple[bool | None, str]:
+def get_systemd_linger_status() -> tuple[Optional[bool], str]:
     """Return systemd linger status for the current user.
 
     Returns:
@@ -556,7 +556,7 @@ def get_launchd_plist_path() -> Path:
     name = f"ai.hermes.gateway-{suffix}" if suffix else "ai.hermes.gateway"
     return Path.home() / "Library" / "LaunchAgents" / f"{name}.plist"
 
-def _detect_venv_dir() -> Path | None:
+def _detect_venv_dir() -> Optional[Path]:
     """Detect the active virtualenv directory.
 
     Checks ``sys.prefix`` first (works regardless of the directory name),
@@ -649,7 +649,7 @@ def _hermes_home_for_target_user(target_home_dir: str) -> str:
         return str(current_hermes)
 
 
-def generate_systemd_unit(system: bool = False, run_as_user: str | None = None) -> str:
+def generate_systemd_unit(system: bool = False, run_as_user: Optional[str] = None) -> str:
     python_path = get_python_path()
     working_dir = str(PROJECT_ROOT)
     detected_venv = _detect_venv_dir()
@@ -773,7 +773,7 @@ def refresh_systemd_unit_if_needed(system: bool = False) -> bool:
 
 
 
-def _print_linger_enable_warning(username: str, detail: str | None = None) -> None:
+def _print_linger_enable_warning(username: str, detail: Optional[str] = None) -> None:
     print()
     print("⚠ Linger not enabled — gateway may stop when you close this terminal.")
     if detail:
@@ -838,7 +838,7 @@ def _select_systemd_scope(system: bool = False) -> bool:
     return get_systemd_unit_path(system=True).exists() and not get_systemd_unit_path(system=False).exists()
 
 
-def systemd_install(force: bool = False, system: bool = False, run_as_user: str | None = None):
+def systemd_install(force: bool = False, system: bool = False, run_as_user: Optional[str] = None):
     if system:
         _require_root_for_system_service("install")
 

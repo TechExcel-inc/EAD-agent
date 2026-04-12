@@ -118,7 +118,7 @@ def maybe_persist_tool_result(
     tool_use_id: str,
     env=None,
     config: BudgetConfig = DEFAULT_BUDGET,
-    threshold: int | float | None = None,
+    threshold: int | Optional[float] = None,
 ) -> str:
     """Layer 2: persist oversized result into the sandbox, return preview + path.
 

@@ -58,7 +58,7 @@ def _pipe_stdin(proc: subprocess.Popen, data: str) -> None:
 
 
 def _popen_bash(
-    cmd: list[str], stdin_data: str | None = None, **kwargs
+    cmd: list[str], stdin_data: Optional[str] = None, **kwargs
 ) -> subprocess.Popen:
     """Spawn a subprocess with standard stdout/stderr/stdin setup.
 
@@ -116,15 +116,15 @@ class ProcessHandle(Protocol):
     return _ThreadedProcessHandle which adapts their blocking calls.
     """
 
-    def poll(self) -> int | None: ...
+    def poll(self) -> Optional[int]: ...
     def kill(self) -> None: ...
-    def wait(self, timeout: float | None = None) -> int: ...
+    def wait(self, timeout: Optional[float] = None) -> int: ...
 
     @property
     def stdout(self) -> IO[str] | None: ...
 
     @property
-    def returncode(self) -> int | None: ...
+    def returncode(self) -> Optional[int]: ...
 
 
 class _ThreadedProcessHandle:
@@ -143,7 +143,7 @@ class _ThreadedProcessHandle:
     ):
         self._cancel_fn = cancel_fn
         self._done = threading.Event()
-        self._returncode: int | None = None
+        self._returncode: Optional[int] = None
         self._error: Exception | None = None
 
         # Pipe for stdout — drain thread in _wait_for_process reads the read end.
@@ -178,10 +178,10 @@ class _ThreadedProcessHandle:
         return self._stdout
 
     @property
-    def returncode(self) -> int | None:
+    def returncode(self) -> Optional[int]:
         return self._returncode
 
-    def poll(self) -> int | None:
+    def poll(self) -> Optional[int]:
         return self._returncode if self._done.is_set() else None
 
     def kill(self):
@@ -191,7 +191,7 @@ class _ThreadedProcessHandle:
             except Exception:
                 pass
 
-    def wait(self, timeout: float | None = None) -> int:
+    def wait(self, timeout: Optional[float] = None) -> int:
         self._done.wait(timeout=timeout)
         return self._returncode
 
@@ -255,7 +255,7 @@ class BaseEnvironment(ABC):
         *,
         login: bool = False,
         timeout: int = 120,
-        stdin_data: str | None = None,
+        stdin_data: Optional[str] = None,
     ) -> ProcessHandle:
         """Spawn a bash process to run *cmd_string*.
 
@@ -491,8 +491,8 @@ class BaseEnvironment(ABC):
         command: str,
         cwd: str = "",
         *,
-        timeout: int | None = None,
-        stdin_data: str | None = None,
+        timeout: Optional[int] = None,
+        stdin_data: Optional[str] = None,
     ) -> dict:
         """Execute a command, return {"output": str, "returncode": int}."""
         self._before_execute()
@@ -541,7 +541,7 @@ class BaseEnvironment(ABC):
         except Exception:
             pass
 
-    def _prepare_command(self, command: str) -> tuple[str, str | None]:
+    def _prepare_command(self, command: str) -> tuple[str, Optional[str]]:
         """Transform sudo commands if SUDO_PASSWORD is available."""
         from tools.terminal_tool import _transform_sudo_command
 

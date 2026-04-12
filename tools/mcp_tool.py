@@ -1488,7 +1488,7 @@ def _make_check_fn(server_name: str):
 # Discovery & registration
 # ---------------------------------------------------------------------------
 
-def _normalize_mcp_input_schema(schema: dict | None) -> dict:
+def _normalize_mcp_input_schema(schema: Optional[dict]) -> dict:
     """Normalize MCP input schemas for LLM tool-calling compatibility."""
     if not schema:
         return {"type": "object", "properties": {}}

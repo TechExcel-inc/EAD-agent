@@ -106,7 +106,7 @@ def _curses_select(title: str, items: list[tuple[str, str]], default: int = 0) -
                 return default
 
 
-def _prompt(label: str, default: str | None = None, secret: bool = False) -> str:
+def _prompt(label: str, default: Optional[str] = None, secret: bool = False) -> str:
     """Prompt for a value with optional default and secret masking."""
     suffix = f" [{default}]" if default else ""
     if secret:

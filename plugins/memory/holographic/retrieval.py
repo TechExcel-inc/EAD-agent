@@ -48,7 +48,7 @@ class FactRetriever:
     def search(
         self,
         query: str,
-        category: str | None = None,
+        category: Optional[str] = None,
         min_trust: float = 0.3,
         limit: int = 10,
     ) -> list[dict]:
@@ -114,7 +114,7 @@ class FactRetriever:
     def probe(
         self,
         entity: str,
-        category: str | None = None,
+        category: Optional[str] = None,
         limit: int = 10,
     ) -> list[dict]:
         """Compositional entity query using HRR algebra.
@@ -192,7 +192,7 @@ class FactRetriever:
     def related(
         self,
         entity: str,
-        category: str | None = None,
+        category: Optional[str] = None,
         limit: int = 10,
     ) -> list[dict]:
         """Discover facts that share structural connections with an entity.
@@ -260,7 +260,7 @@ class FactRetriever:
     def reason(
         self,
         entities: list[str],
-        category: str | None = None,
+        category: Optional[str] = None,
         limit: int = 10,
     ) -> list[dict]:
         """Multi-entity compositional query — vector-space JOIN.
@@ -337,7 +337,7 @@ class FactRetriever:
 
     def contradict(
         self,
-        category: str | None = None,
+        category: Optional[str] = None,
         threshold: float = 0.3,
         limit: int = 10,
     ) -> list[dict]:
@@ -444,7 +444,7 @@ class FactRetriever:
     def _score_facts_by_vector(
         self,
         target_vec: "np.ndarray",
-        category: str | None = None,
+        category: Optional[str] = None,
         limit: int = 10,
     ) -> list[dict]:
         """Score facts by similarity to a target vector."""
@@ -481,7 +481,7 @@ class FactRetriever:
     def _fts_candidates(
         self,
         query: str,
-        category: str | None,
+        category: Optional[str],
         min_trust: float,
         limit: int,
     ) -> list[dict]:
@@ -566,7 +566,7 @@ class FactRetriever:
         union = len(set_a | set_b)
         return intersection / union if union > 0 else 0.0
 
-    def _temporal_decay(self, timestamp_str: str | None) -> float:
+    def _temporal_decay(self, timestamp_str: Optional[str]) -> float:
         """Exponential decay: 0.5^(age_days / half_life_days).
 
         Returns 1.0 if decay is disabled or timestamp is missing.

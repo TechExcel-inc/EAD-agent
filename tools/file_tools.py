@@ -26,7 +26,7 @@ _EXPECTED_WRITE_ERRNOS = {errno.EACCES, errno.EPERM, errno.EROFS}
 # Configurable via config.yaml:  file_read_max_chars: 200000
 # ---------------------------------------------------------------------------
 _DEFAULT_MAX_READ_CHARS = 100_000
-_max_read_chars_cached: int | None = None
+_max_read_chars_cached: Optional[int] = None
 
 
 def _get_max_read_chars() -> int:
@@ -96,7 +96,7 @@ _SENSITIVE_PATH_PREFIXES = ("/etc/", "/boot/", "/usr/lib/systemd/")
 _SENSITIVE_EXACT_PATHS = {"/var/run/docker.sock", "/run/docker.sock"}
 
 
-def _check_sensitive_path(filepath: str) -> str | None:
+def _check_sensitive_path(filepath: str) -> Optional[str]:
     """Return an error message if the path targets a sensitive system location."""
     try:
         resolved = os.path.realpath(os.path.expanduser(filepath))
@@ -537,7 +537,7 @@ def _update_read_timestamp(filepath: str, task_id: str) -> None:
             task_data.setdefault("read_timestamps", {})[resolved] = current_mtime
 
 
-def _check_file_staleness(filepath: str, task_id: str) -> str | None:
+def _check_file_staleness(filepath: str, task_id: str) -> Optional[str]:
     """Check whether a file was modified since the agent last read it.
 
     Returns a warning string if the file is stale (mtime changed since

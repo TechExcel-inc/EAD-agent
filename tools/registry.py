@@ -67,7 +67,7 @@ class ToolRegistry:
         is_async: bool = False,
         description: str = "",
         emoji: str = "",
-        max_result_size_chars: int | float | None = None,
+        max_result_size_chars: int | Optional[float] = None,
     ):
         """Register a tool.  Called at module-import time by each tool file."""
         existing = self._tools.get(name)
@@ -169,7 +169,7 @@ class ToolRegistry:
     # Query helpers  (replace redundant dicts in model_tools.py)
     # ------------------------------------------------------------------
 
-    def get_max_result_size(self, name: str, default: int | float | None = None) -> int | float:
+    def get_max_result_size(self, name: str, default: int | Optional[float] = None) -> int | float:
         """Return per-tool max result size, or *default* (or global default)."""
         entry = self._tools.get(name)
         if entry and entry.max_result_size_chars is not None:

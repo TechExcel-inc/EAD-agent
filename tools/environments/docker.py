@@ -58,7 +58,7 @@ def _normalize_forward_env_names(forward_env: list[str] | None) -> list[str]:
     return normalized
 
 
-def _normalize_env_dict(env: dict | None) -> dict[str, str]:
+def _normalize_env_dict(env: Optional[dict]) -> dict[str, str]:
     """Validate and normalize a docker_env dict to {str: str}.
 
     Filters out entries with invalid variable names or non-string values.
@@ -238,7 +238,7 @@ class DockerEnvironment(BaseEnvironment):
         task_id: str = "default",
         volumes: list = None,
         forward_env: list[str] | None = None,
-        env: dict | None = None,
+        env: Optional[dict] = None,
         network: bool = True,
         host_cwd: str = None,
         auto_mount_cwd: bool = False,
@@ -469,7 +469,7 @@ class DockerEnvironment(BaseEnvironment):
 
     def _run_bash(self, cmd_string: str, *, login: bool = False,
                   timeout: int = 120,
-                  stdin_data: str | None = None) -> subprocess.Popen:
+                  stdin_data: Optional[str] = None) -> subprocess.Popen:
         """Spawn a bash process inside the Docker container."""
         assert self._container_id, "Container not started"
         cmd = [self._docker_exe, "exec"]

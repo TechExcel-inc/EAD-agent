@@ -337,7 +337,7 @@ def resolve_alias(
 def get_authenticated_provider_slugs(
     current_provider: str = "",
     user_providers: dict = None,
-    custom_providers: list | None = None,
+    custom_providers: Optional[list] = None,
 ) -> list[str]:
     """Return slugs of providers that have credentials.
 
@@ -386,7 +386,7 @@ def switch_model(
     is_global: bool = False,
     explicit_provider: str = "",
     user_providers: dict = None,
-    custom_providers: list | None = None,
+    custom_providers: Optional[list] = None,
 ) -> ModelSwitchResult:
     """Core model-switching pipeline shared between CLI and gateway.
 
@@ -726,7 +726,7 @@ def switch_model(
 def list_authenticated_providers(
     current_provider: str = "",
     user_providers: dict = None,
-    custom_providers: list | None = None,
+    custom_providers: Optional[list] = None,
     max_models: int = 8,
 ) -> List[dict]:
     """Detect which providers have credentials and list their curated models.

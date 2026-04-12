@@ -100,7 +100,7 @@ class MemoryStore:
 
     def __init__(
         self,
-        db_path: "str | Path | None" = None,
+        db_path: "str | Optional[Path]" = None,
         default_trust: float = 0.5,
         hrr_dim: int = 1024,
     ) -> None:
@@ -187,7 +187,7 @@ class MemoryStore:
     def search_facts(
         self,
         query: str,
-        category: str | None = None,
+        category: Optional[str] = None,
         min_trust: float = 0.3,
         limit: int = 10,
     ) -> list[dict]:
@@ -238,10 +238,10 @@ class MemoryStore:
     def update_fact(
         self,
         fact_id: int,
-        content: str | None = None,
-        trust_delta: float | None = None,
-        tags: str | None = None,
-        category: str | None = None,
+        content: Optional[str] = None,
+        trust_delta: Optional[float] = None,
+        tags: Optional[str] = None,
+        category: Optional[str] = None,
     ) -> bool:
         """Partially update a fact. Trust is clamped to [0, 1].
 
@@ -318,7 +318,7 @@ class MemoryStore:
 
     def list_facts(
         self,
-        category: str | None = None,
+        category: Optional[str] = None,
         min_trust: float = 0.0,
         limit: int = 50,
     ) -> list[dict]:
@@ -529,7 +529,7 @@ class MemoryStore:
             )
             self._conn.commit()
 
-    def rebuild_all_vectors(self, dim: int | None = None) -> int:
+    def rebuild_all_vectors(self, dim: Optional[int] = None) -> int:
         """Recompute all HRR vectors + banks from text. For recovery/migration.
 
         Returns the number of facts processed.

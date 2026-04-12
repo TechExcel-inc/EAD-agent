@@ -228,7 +228,7 @@ def is_interactive_stdin() -> bool:
         return False
 
 
-def print_noninteractive_setup_guidance(reason: str | None = None) -> None:
+def print_noninteractive_setup_guidance(reason: Optional[str] = None) -> None:
     """Print guidance for headless/non-interactive setup flows."""
     print()
     print(color("⚕ Hermes Setup — Non-interactive mode", Colors.CYAN, Colors.BOLD))

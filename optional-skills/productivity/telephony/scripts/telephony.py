@@ -114,7 +114,7 @@ def _config_lookup(*paths: tuple[str, ...], default: str = "") -> str:
     return default
 
 
-def _load_dotenv_values(path: Path | None = None) -> dict[str, str]:
+def _load_dotenv_values(path: Optional[Path] = None) -> dict[str, str]:
     env_file = path or _env_path()
     if not env_file.exists():
         return {}
@@ -142,7 +142,7 @@ def _env_or_config(env_key: str, *config_paths: tuple[str, ...], default: str = 
     return _config_lookup(*config_paths, default=default)
 
 
-def _load_state(path: Path | None = None) -> dict[str, Any]:
+def _load_state(path: Optional[Path] = None) -> dict[str, Any]:
     state_file = path or _state_path()
     if not state_file.exists():
         return {"version": STATE_VERSION}
@@ -156,7 +156,7 @@ def _load_state(path: Path | None = None) -> dict[str, Any]:
     return {"version": STATE_VERSION}
 
 
-def _save_state(state: dict[str, Any], path: Path | None = None) -> Path:
+def _save_state(state: dict[str, Any], path: Optional[Path] = None) -> Path:
     state_file = path or _state_path()
     state_file.parent.mkdir(parents=True, exist_ok=True)
     state_file.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -170,7 +170,7 @@ def _quote_env_value(value: str) -> str:
     return f'"{escaped}"'
 
 
-def _upsert_env_file(updates: dict[str, str], env_path: Path | None = None) -> Path:
+def _upsert_env_file(updates: dict[str, str], env_path: Optional[Path] = None) -> Path:
     path = env_path or _env_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
@@ -224,7 +224,7 @@ def _mask_phone(number: str) -> str:
     return f"***-***-{digits[-4:]}"
 
 
-def _parse_twilio_date(value: str | None) -> datetime | None:
+def _parse_twilio_date(value: Optional[str]) -> datetime | None:
     if not value:
         return None
     try:
@@ -248,7 +248,7 @@ def _json_request(
         url = f"{url}?{query}"
 
     request_headers = dict(headers or {})
-    body: bytes | None = None
+    body: Optional[bytes] = None
     if json_body is not None:
         body = json.dumps(json_body).encode("utf-8")
         request_headers.setdefault("Content-Type", "application/json")
@@ -332,8 +332,8 @@ def _remember_twilio_number(
     phone_number: str,
     phone_sid: str = "",
     save_env: bool = False,
-    state_path: Path | None = None,
-    env_path: Path | None = None,
+    state_path: Optional[Path] = None,
+    env_path: Optional[Path] = None,
 ) -> dict[str, Any]:
     state = _load_state(state_path)
     twilio_state = state.setdefault("twilio", {})
@@ -360,8 +360,8 @@ def _remember_vapi_number(
     *,
     phone_number_id: str,
     save_env: bool = False,
-    state_path: Path | None = None,
-    env_path: Path | None = None,
+    state_path: Optional[Path] = None,
+    env_path: Optional[Path] = None,
 ) -> dict[str, Any]:
     state = _load_state(state_path)
     vapi_state = state.setdefault("vapi", {})
@@ -379,7 +379,7 @@ def _remember_vapi_number(
     }
 
 
-def _resolve_twilio_number(identifier: str | None = None) -> OwnedTwilioNumber:
+def _resolve_twilio_number(identifier: Optional[str] = None) -> OwnedTwilioNumber:
     if identifier:
         wanted = identifier.strip()
         normalized = None
@@ -463,8 +463,8 @@ def _ai_provider(default: str = DEFAULT_AI_PROVIDER) -> str:
 def _twilio_search_numbers(
     *,
     country: str = "US",
-    area_code: str | None = None,
-    contains: str | None = None,
+    area_code: Optional[str] = None,
+    contains: Optional[str] = None,
     limit: int = 10,
     sms_enabled: bool = True,
     voice_enabled: bool = True,
@@ -513,8 +513,8 @@ def _twilio_buy_number(
     phone_number: str,
     *,
     save_env: bool = False,
-    state_path: Path | None = None,
-    env_path: Path | None = None,
+    state_path: Optional[Path] = None,
+    env_path: Optional[Path] = None,
 ) -> dict[str, Any]:
     normalized = _normalize_phone(phone_number)
     payload = _twilio_request("POST", "IncomingPhoneNumbers.json", form={"PhoneNumber": normalized})
@@ -587,11 +587,11 @@ def _twiml_play(audio_url: str) -> str:
 def _twilio_call(
     to_number: str,
     *,
-    message: str | None = None,
-    audio_url: str | None = None,
+    message: Optional[str] = None,
+    audio_url: Optional[str] = None,
     voice: str = TWILIO_DEFAULT_TTS_VOICE,
-    send_digits: str | None = None,
-    from_identifier: str | None = None,
+    send_digits: Optional[str] = None,
+    from_identifier: Optional[str] = None,
     record: bool = False,
 ) -> dict[str, Any]:
     destination = _normalize_phone(to_number)
@@ -646,7 +646,7 @@ def _twilio_send_sms(
     body: str,
     *,
     media_urls: list[str] | None = None,
-    from_identifier: str | None = None,
+    from_identifier: Optional[str] = None,
 ) -> dict[str, Any]:
     destination = _normalize_phone(to_number)
     source = _resolve_twilio_number(from_identifier)
@@ -695,8 +695,8 @@ def _twilio_inbox(
     limit: int = 20,
     since_last: bool = False,
     mark_seen: bool = False,
-    phone_identifier: str | None = None,
-    state_path: Path | None = None,
+    phone_identifier: Optional[str] = None,
+    state_path: Optional[Path] = None,
 ) -> dict[str, Any]:
     owned = _resolve_twilio_number(phone_identifier)
     payload = _twilio_request(
@@ -748,10 +748,10 @@ def _twilio_inbox(
 
 def _vapi_import_twilio_number(
     *,
-    phone_identifier: str | None = None,
+    phone_identifier: Optional[str] = None,
     save_env: bool = False,
-    state_path: Path | None = None,
-    env_path: Path | None = None,
+    state_path: Optional[Path] = None,
+    env_path: Optional[Path] = None,
 ) -> dict[str, Any]:
     api_key = _vapi_api_key()
     if not api_key:
@@ -796,8 +796,8 @@ def _bland_call(
     phone_number: str,
     task: str,
     *,
-    voice: str | None = None,
-    first_sentence: str | None = None,
+    voice: Optional[str] = None,
+    first_sentence: Optional[str] = None,
     max_duration: int = 3,
 ) -> dict[str, Any]:
     api_key = _bland_api_key()
@@ -842,7 +842,7 @@ def _bland_call(
     }
 
 
-def _bland_status(call_id: str, analyze: str | None = None) -> dict[str, Any]:
+def _bland_status(call_id: str, analyze: Optional[str] = None) -> dict[str, Any]:
     api_key = _bland_api_key()
     if not api_key:
         raise TelephonyError("Bland.ai is not configured.")
@@ -874,8 +874,8 @@ def _vapi_call(
     phone_number: str,
     task: str,
     *,
-    voice_id: str | None = None,
-    first_sentence: str | None = None,
+    voice_id: Optional[str] = None,
+    first_sentence: Optional[str] = None,
     max_duration: int = 3,
 ) -> dict[str, Any]:
     api_key = _vapi_api_key()

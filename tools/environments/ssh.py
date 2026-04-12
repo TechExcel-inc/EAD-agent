@@ -55,7 +55,7 @@ class SSHEnvironment(BaseEnvironment):
 
         self.init_session()
 
-    def _build_ssh_command(self, extra_args: list | None = None) -> list:
+    def _build_ssh_command(self, extra_args: Optional[list] = None) -> list:
         cmd = ["ssh"]
         cmd.extend(["-o", f"ControlPath={self.control_socket}"])
         cmd.extend(["-o", "ControlMaster=auto"])
@@ -149,7 +149,7 @@ class SSHEnvironment(BaseEnvironment):
 
     def _run_bash(self, cmd_string: str, *, login: bool = False,
                   timeout: int = 120,
-                  stdin_data: str | None = None) -> subprocess.Popen:
+                  stdin_data: Optional[str] = None) -> subprocess.Popen:
         """Spawn an SSH process that runs bash on the remote host."""
         cmd = self._build_ssh_command()
         if login:

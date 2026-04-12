@@ -902,7 +902,7 @@ def get_model_context_length(
     model: str,
     base_url: str = "",
     api_key: str = "",
-    config_context_length: int | None = None,
+    config_context_length: Optional[int] = None,
     provider: str = "",
 ) -> int:
     """Get the context length for a model.

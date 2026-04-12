@@ -282,7 +282,7 @@ def _get_cron_auto_delivery_target():
     }
 
 
-def _maybe_skip_cron_duplicate_send(platform_name: str, chat_id: str, thread_id: str | None):
+def _maybe_skip_cron_duplicate_send(platform_name: str, chat_id: str, thread_id: Optional[str]):
     """Skip redundant cron send_message calls when the scheduler will auto-deliver there."""
     auto_target = _get_cron_auto_delivery_target()
     if not auto_target:

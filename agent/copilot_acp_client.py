@@ -56,7 +56,7 @@ def _jsonrpc_error(message_id: Any, code: int, message: str) -> dict[str, Any]:
 
 def _format_messages_as_prompt(
     messages: list[dict[str, Any]],
-    model: str | None = None,
+    model: Optional[str] = None,
     tools: list[dict[str, Any]] | None = None,
     tool_choice: Any = None,
 ) -> str:
@@ -259,13 +259,13 @@ class CopilotACPClient:
     def __init__(
         self,
         *,
-        api_key: str | None = None,
-        base_url: str | None = None,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
         default_headers: dict[str, str] | None = None,
-        acp_command: str | None = None,
+        acp_command: Optional[str] = None,
         acp_args: list[str] | None = None,
-        acp_cwd: str | None = None,
-        command: str | None = None,
+        acp_cwd: Optional[str] = None,
+        command: Optional[str] = None,
         args: list[str] | None = None,
         **_: Any,
     ):
@@ -300,9 +300,9 @@ class CopilotACPClient:
     def _create_chat_completion(
         self,
         *,
-        model: str | None = None,
+        model: Optional[str] = None,
         messages: list[dict[str, Any]] | None = None,
-        timeout: float | None = None,
+        timeout: Optional[float] = None,
         tools: list[dict[str, Any]] | None = None,
         tool_choice: Any = None,
         **_: Any,

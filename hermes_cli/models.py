@@ -710,7 +710,7 @@ def format_model_pricing_table(
 
 
 def fetch_models_with_pricing(
-    api_key: str | None = None,
+    api_key: Optional[str] = None,
     base_url: str = "https://openrouter.ai/api",
     timeout: float = 8.0,
     *,

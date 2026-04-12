@@ -224,7 +224,7 @@ def _load_pending_auth() -> dict:
     return data
 
 
-def _extract_code_and_state(code_or_url: str) -> tuple[str, str | None]:
+def _extract_code_and_state(code_or_url: str) -> tuple[str, Optional[str]]:
     """Accept either a raw auth code or the full redirect URL pasted by the user."""
     if not code_or_url.startswith("http"):
         return code_or_url, None

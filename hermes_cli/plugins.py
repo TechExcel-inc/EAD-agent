@@ -137,7 +137,7 @@ class PluginContext:
         schema: dict,
         handler: Callable,
         check_fn: Callable | None = None,
-        requires_env: list | None = None,
+        requires_env: Optional[list] = None,
         is_async: bool = False,
         description: str = "",
         emoji: str = "",

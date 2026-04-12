@@ -61,7 +61,7 @@ _WORKSPACE_STATE_GLOBS = (
 )
 
 
-def _find_migration_script() -> Path | None:
+def _find_migration_script() -> Optional[Path]:
     """Find the openclaw_to_hermes.py script in known locations."""
     for candidate in [_OPENCLAW_SCRIPT, _OPENCLAW_SCRIPT_INSTALLED]:
         if candidate.exists():

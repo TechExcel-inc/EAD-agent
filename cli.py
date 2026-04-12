@@ -111,7 +111,7 @@ def _load_prefill_messages(file_path: str) -> List[Dict[str, Any]]:
         return []
 
 
-def _parse_reasoning_config(effort: str) -> dict | None:
+def _parse_reasoning_config(effort: str) -> Optional[dict]:
     """Parse a reasoning effort level into an OpenRouter reasoning config dict."""
     from hermes_constants import parse_reasoning_effort
     result = parse_reasoning_effort(effort)
@@ -120,7 +120,7 @@ def _parse_reasoning_config(effort: str) -> dict | None:
     return result
 
 
-def _parse_service_tier_config(raw: str) -> str | None:
+def _parse_service_tier_config(raw: str) -> Optional[str]:
     """Parse a persisted service-tier preference into a Responses API value."""
     value = str(raw or "").strip().lower()
     if not value or value in {"normal", "default", "standard", "off", "none"}:
@@ -137,7 +137,7 @@ def _get_chrome_debug_candidates(system: str) -> list[str]:
     candidates: list[str] = []
     seen: set[str] = set()
 
-    def _add_candidate(path: str | None) -> None:
+    def _add_candidate(path: Optional[str]) -> None:
         if not path:
             return
         normalized = os.path.normcase(os.path.normpath(path))
@@ -1090,7 +1090,7 @@ def _split_path_input(raw: str) -> tuple[str, str]:
     return token, remainder
 
 
-def _resolve_attachment_path(raw_path: str) -> Path | None:
+def _resolve_attachment_path(raw_path: str) -> Optional[Path]:
     """Resolve a user-supplied local attachment path.
 
     Accepts quoted or unquoted paths, expands ``~`` and env vars, and resolves
@@ -1122,7 +1122,7 @@ def _resolve_attachment_path(raw_path: str) -> Path | None:
     return resolved
 
 
-def _detect_file_drop(user_input: str) -> "dict | None":
+def _detect_file_drop(user_input: str) -> "Optional[dict]":
     """Detect if *user_input* starts with a real local file path.
 
     This catches dragged/pasted paths before they are mistaken for slash
@@ -1170,7 +1170,7 @@ def _detect_file_drop(user_input: str) -> "dict | None":
     }
 
 
-def _format_image_attachment_badges(attached_images: list[Path], image_counter: int, width: int | None = None) -> str:
+def _format_image_attachment_badges(attached_images: list[Path], image_counter: int, width: Optional[int] = None) -> str:
     """Format the attached-image badge row for the interactive CLI.
 
     Narrow terminals such as Termux should get a compact summary that fits on a
@@ -1208,7 +1208,7 @@ def _should_auto_attach_clipboard_image_on_paste(pasted_text: str) -> bool:
     return not pasted_text.strip()
 
 
-def _collect_query_images(query: str | None, image_arg: str | None = None) -> tuple[str, list[Path]]:
+def _collect_query_images(query: Optional[str], image_arg: Optional[str] = None) -> tuple[str, list[Path]]:
     """Collect local image attachments for single-query CLI flows."""
     message = query or ""
     images: list[Path] = []
@@ -2666,7 +2666,7 @@ class HermesCLI:
         route["request_overrides"] = overrides
         return route
 
-    def _init_agent(self, *, model_override: str = None, runtime_override: dict = None, route_label: str = None, request_overrides: dict | None = None) -> bool:
+    def _init_agent(self, *, model_override: str = None, runtime_override: dict = None, route_label: str = None, request_overrides: Optional[dict] = None) -> bool:
         """
         Initialize the agent on first use.
         When resuming a session, restores conversation history from SQLite.
@@ -3210,7 +3210,7 @@ class HermesCLI:
         else:
             print(f"  ❌ {result['error']}")
 
-    def _resolve_checkpoint_ref(self, ref: str, checkpoints: list) -> str | None:
+    def _resolve_checkpoint_ref(self, ref: str, checkpoints: list) -> Optional[str]:
         """Resolve a checkpoint number or hash to a full commit hash."""
         try:
             idx = int(ref) - 1  # 1-indexed for user

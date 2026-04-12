@@ -70,7 +70,7 @@ def clone_honcho_for_profile(profile_name: str) -> bool:
     return True
 
 
-def _ensure_peer_exists(host_key: str | None = None) -> bool:
+def _ensure_peer_exists(host_key: Optional[str] = None) -> bool:
     """Create the AI peer in Honcho if it doesn't already exist.
 
     Idempotent -- safe to call multiple times. Returns True if the peer
@@ -226,7 +226,7 @@ def sync_honcho_profiles_quiet() -> int:
     return created
 
 
-_profile_override: str | None = None
+_profile_override: Optional[str] = None
 
 
 def _host_key() -> str:
@@ -263,7 +263,7 @@ def _read_config() -> dict:
     return {}
 
 
-def _write_config(cfg: dict, path: Path | None = None) -> None:
+def _write_config(cfg: dict, path: Optional[Path] = None) -> None:
     path = path or _local_config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -278,7 +278,7 @@ def _resolve_api_key(cfg: dict) -> str:
     return host_key or cfg.get("apiKey", "") or os.environ.get("HONCHO_API_KEY", "")
 
 
-def _prompt(label: str, default: str | None = None, secret: bool = False) -> str:
+def _prompt(label: str, default: Optional[str] = None, secret: bool = False) -> str:
     suffix = f" [{default}]" if default else ""
     sys.stdout.write(f"  {label}{suffix}: ")
     sys.stdout.flush()

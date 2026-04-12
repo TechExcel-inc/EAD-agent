@@ -308,7 +308,7 @@ def _should_parallelize_tool_batch(tool_calls) -> bool:
     return True
 
 
-def _extract_parallel_scope_path(tool_name: str, function_args: dict) -> Path | None:
+def _extract_parallel_scope_path(tool_name: str, function_args: dict) -> Optional[Path]:
     """Return the normalized file target for path-scoped tools."""
     if tool_name not in _PATH_SCOPED_TOOLS:
         return None
@@ -555,6 +555,8 @@ class AIAgent:
         args: list[str] | None = None,
         model: str = "",
         max_iterations: int = 90,  # Default tool-calling iterations (shared with subagents)
+        interactive_mode: bool = False,  # Enable periodic summaries and user confirmations
+        summary_interval: int = 5,  # Number of iterations between summaries in interactive mode
         tool_delay: float = 1.0,
         enabled_toolsets: List[str] = None,
         disabled_toolsets: List[str] = None,
@@ -610,6 +612,8 @@ class AIAgent:
             api_mode (str): API mode override: "chat_completions" or "codex_responses"
             model (str): Model name to use (default: "anthropic/claude-opus-4.6")
             max_iterations (int): Maximum number of tool calling iterations (default: 90)
+            interactive_mode (bool): Enable interactive mode with periodic summaries and confirmations (default: False)
+            summary_interval (int): Number of iterations between summaries in interactive mode (default: 5)
             tool_delay (float): Delay between tool calls in seconds (default: 1.0)
             enabled_toolsets (List[str]): Only enable tools from these toolsets (optional)
             disabled_toolsets (List[str]): Disable tools from these toolsets (optional)
@@ -643,6 +647,8 @@ class AIAgent:
 
         self.model = model
         self.max_iterations = max_iterations
+        self.interactive_mode = interactive_mode
+        self.summary_interval = summary_interval
         # Shared iteration budget — parent creates, children inherit.
         # Consumed by every LLM turn across parent + all subagents.
         self.iteration_budget = iteration_budget or IterationBudget(max_iterations)
@@ -700,11 +706,12 @@ class AIAgent:
         except Exception:
             pass
 
-        # Direct OpenAI sessions use the Responses API path.  GPT-5.x tool
+        # Direct OpenAI sessions use the Responses API path.  GPT-5.x/o-series tool
         # calls with reasoning are rejected on /v1/chat/completions, and
         # Hermes is a tool-using client by default.
         if self.api_mode == "chat_completions" and self._is_direct_openai_url():
-            self.api_mode = "codex_responses"
+            if "gpt-4" not in self.model and "gpt-3" not in self.model:
+                self.api_mode = "codex_responses"
 
         # Pre-warm OpenRouter model metadata cache in a background thread.
         # fetch_model_metadata() is cached for 1 hour; this avoids a blocking
@@ -789,7 +796,7 @@ class AIAgent:
         # notifications to show progress.
         self._last_activity_ts: float = time.time()
         self._last_activity_desc: str = "initializing"
-        self._current_tool: str | None = None
+        self._current_tool: Optional[str] = None
         self._api_call_count: int = 0
 
         # Rate limit tracking — updated from x-ratelimit-* response headers
@@ -1306,7 +1313,7 @@ class AIAgent:
         # When running against an Ollama server, detect the model's max context
         # and pass num_ctx on every chat request so the full window is used.
         # User override: set model.ollama_num_ctx in config.yaml to cap VRAM use.
-        self._ollama_num_ctx: int | None = None
+        self._ollama_num_ctx: Optional[int] = None
         _ollama_num_ctx_override = None
         if isinstance(_model_cfg, dict):
             _ollama_num_ctx_override = _model_cfg.get("ollama_num_ctx")
@@ -2661,6 +2668,57 @@ class AIAgent:
         self._interrupt_message = None
         _set_interrupt(False)
 
+    def should_pause_for_interactive_checkpoint(self, iteration_count: int) -> bool:
+        """
+        Check if the agent should pause for an interactive checkpoint.
+
+        Args:
+            iteration_count: Current iteration count
+
+        Returns:
+            True if interactive mode is enabled and we've reached a checkpoint interval
+        """
+        return (
+            self.interactive_mode and
+            iteration_count > 0 and
+            iteration_count % self.summary_interval == 0
+        )
+
+    def format_interactive_checkpoint_message(self, iteration_count: int, recent_tools: list[str]) -> str:
+        """
+        Format the interactive checkpoint message shown to the user.
+
+        Args:
+            iteration_count: Current iteration count
+            recent_tools: List of recently used tool names
+
+        Returns:
+            Formatted checkpoint message
+        """
+        lines = [
+            f"\n📊 **Progress Checkpoint (Iteration {iteration_count})**",
+            f"   Completed {iteration_count} iterations so far.",
+            f"   Reviewing progress and pausing for your input...\n"
+        ]
+
+        if recent_tools:
+            lines.extend([
+                "🔧 **Recent Actions:**",
+                *[f"   • {tool}" for tool in recent_tools],
+                ""
+            ])
+
+        lines.extend([
+            "⏸️  **Agent Paused - Awaiting Your Direction**",
+            "   Options:",
+            "   • Type 'continue' to resume execution",
+            "   • Type 'stop' to end this session",
+            "   • Provide new instructions to change direction",
+            ""
+        ])
+
+        return "\n".join(lines)
+
     def _touch_activity(self, desc: str) -> None:
         """Update the last-activity timestamp and description (thread-safe)."""
         self._last_activity_ts = time.time()
@@ -3121,7 +3179,7 @@ class AIAgent:
                 logger.warning("Removed duplicate tool call: %s", tc.function.name)
         return unique if len(unique) < len(tool_calls) else tool_calls
 
-    def _repair_tool_call(self, tool_name: str) -> str | None:
+    def _repair_tool_call(self, tool_name: str) -> Optional[str]:
         """Attempt to repair a mismatched tool name before aborting.
 
         1. Try lowercase
@@ -5929,7 +5987,7 @@ class AIAgent:
         )
         return any(model.startswith(prefix) for prefix in reasoning_model_prefixes)
 
-    def _github_models_reasoning_extra_body(self) -> dict | None:
+    def _github_models_reasoning_extra_body(self) -> Optional[dict]:
         """Format reasoning payload for GitHub Models/OpenAI-compatible routes."""
         try:
             from hermes_cli.models import github_model_reasoning_efforts
@@ -9442,7 +9500,36 @@ class AIAgent:
                     # Save session log incrementally (so progress is visible even if interrupted)
                     self._session_messages = messages
                     self._save_session_log(messages)
-                    
+
+                    # ── Interactive mode: periodic summaries ─────────────────────
+                    # In interactive mode, pause every N iterations to summarize findings
+                    # and wait for user confirmation before proceeding.
+                    if self.should_pause_for_interactive_checkpoint(api_call_count):
+                        # Display recent tool usage for context
+                        recent_tools = []
+                        for msg in reversed(messages[-20:]):
+                            if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                                for tc in msg.get("tool_calls", []):
+                                    if isinstance(tc, dict):
+                                        tool_name = tc.get("function", {}).get("name", "unknown")
+                                        recent_tools.append(f"• {tool_name}")
+                            if len(recent_tools) >= 5:
+                                break
+
+                        # Display formatted checkpoint message
+                        checkpoint_message = self.format_interactive_checkpoint_message(
+                            api_call_count,
+                            list(reversed(recent_tools))
+                        )
+                        self._safe_print(checkpoint_message)
+
+                        # Set interrupt flag to wait for user input
+                        # This causes the loop to break and return to the caller
+                        # The caller should handle resuming with new user input
+                        interrupted = True
+                        _turn_exit_reason = "interactive_checkpoint"
+                        break
+
                     # Continue loop for next response
                     continue
                 

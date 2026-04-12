@@ -1592,7 +1592,7 @@ class DiscordAdapter(BasePlatformAdapter):
         self,
         interaction: discord.Interaction,
         command_text: str,
-        followup_msg: str | None = None,
+        followup_msg: Optional[str] = None,
     ) -> None:
         """Common handler for simple slash commands that dispatch a command string.
 
@@ -1916,7 +1916,7 @@ class DiscordAdapter(BasePlatformAdapter):
         )
         await self.handle_message(event)
 
-    def _resolve_channel_skills(self, channel_id: str, parent_id: str | None = None) -> list[str] | None:
+    def _resolve_channel_skills(self, channel_id: str, parent_id: Optional[str] = None) -> list[str] | None:
         """Look up auto-skill bindings for a Discord channel/forum thread.
 
         Config format (in platform extra):

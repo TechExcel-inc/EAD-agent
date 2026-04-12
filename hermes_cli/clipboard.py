@@ -22,7 +22,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 # Cache WSL detection (checked once per process)
-_wsl_detected: bool | None = None
+_wsl_detected: Optional[bool] = None
 
 
 def save_clipboard_image(dest: Path) -> bool:
@@ -143,7 +143,7 @@ _PS_EXTRACT_IMAGE = (
 # or ``pwsh`` (PowerShell 7+, optional).  Discovery is cached per-process.
 
 
-def _find_powershell() -> str | None:
+def _find_powershell() -> Optional[str]:
     """Return the first available PowerShell executable, or None."""
     for name in ("powershell", "pwsh"):
         try:
@@ -161,10 +161,10 @@ def _find_powershell() -> str | None:
 
 
 # Cache the resolved PowerShell executable (checked once per process)
-_ps_exe: str | None | bool = False  # False = not yet checked
+_ps_exe: Optional[str] | bool = False  # False = not yet checked
 
 
-def _get_ps_exe() -> str | None:
+def _get_ps_exe() -> Optional[str]:
     global _ps_exe
     if _ps_exe is False:
         _ps_exe = _find_powershell()

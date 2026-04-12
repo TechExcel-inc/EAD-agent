@@ -20,7 +20,7 @@ def git_repo(tmp_path):
     return repo
 
 
-def _force_remove_worktree(info: dict | None) -> None:
+def _force_remove_worktree(info: Optional[dict]) -> None:
     if not info:
         return
     subprocess.run(

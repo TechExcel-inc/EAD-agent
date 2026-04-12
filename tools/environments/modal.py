@@ -38,7 +38,7 @@ def _direct_snapshot_key(task_id: str) -> str:
     return f"{_DIRECT_SNAPSHOT_NAMESPACE}:{task_id}"
 
 
-def _get_snapshot_restore_candidate(task_id: str) -> tuple[str | None, bool]:
+def _get_snapshot_restore_candidate(task_id: str) -> tuple[Optional[str], bool]:
     snapshots = _load_snapshots()
     namespaced_key = _direct_snapshot_key(task_id)
     snapshot_id = snapshots.get(namespaced_key)
@@ -57,7 +57,7 @@ def _store_direct_snapshot(task_id: str, snapshot_id: str) -> None:
     _save_snapshots(snapshots)
 
 
-def _delete_direct_snapshot(task_id: str, snapshot_id: str | None = None) -> None:
+def _delete_direct_snapshot(task_id: str, snapshot_id: Optional[str] = None) -> None:
     snapshots = _load_snapshots()
     updated = False
     for key in (_direct_snapshot_key(task_id), task_id):
@@ -300,7 +300,7 @@ class ModalEnvironment(BaseEnvironment):
 
     def _run_bash(self, cmd_string: str, *, login: bool = False,
                   timeout: int = 120,
-                  stdin_data: str | None = None):
+                  stdin_data: Optional[str] = None):
         """Return a _ThreadedProcessHandle wrapping an async Modal sandbox exec."""
         sandbox = self._sandbox
         worker = self._worker

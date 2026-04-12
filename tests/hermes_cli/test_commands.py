@@ -516,7 +516,7 @@ class TestSubcommandCompletion:
 # ── Ghost text (SlashCommandAutoSuggest) ────────────────────────────────
 
 
-def _suggestion(text: str, completer=None) -> str | None:
+def _suggestion(text: str, completer=None) -> Optional[str]:
     """Get ghost text suggestion for given input."""
     suggest = SlashCommandAutoSuggest(completer=completer)
     doc = Document(text=text)

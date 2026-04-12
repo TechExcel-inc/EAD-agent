@@ -395,8 +395,8 @@ def _gateway_setup_hint() -> str:
 def _build_setup_note(
     readiness_status: SkillReadinessStatus,
     missing: List[str],
-    setup_help: str | None = None,
-) -> str | None:
+    setup_help: Optional[str] = None,
+) -> Optional[str]:
     if readiness_status == SkillReadinessStatus.SETUP_NEEDED:
         missing_str = ", ".join(missing) if missing else "required prerequisites"
         note = f"Setup needed before using this skill: missing {missing_str}."

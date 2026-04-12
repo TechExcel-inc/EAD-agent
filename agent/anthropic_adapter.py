@@ -186,7 +186,7 @@ def _normalize_base_url_text(base_url) -> str:
     return str(base_url).strip()
 
 
-def _is_third_party_anthropic_endpoint(base_url: str | None) -> bool:
+def _is_third_party_anthropic_endpoint(base_url: Optional[str]) -> bool:
     """Return True for non-Anthropic endpoints using the Anthropic Messages API.
 
     Third-party proxies (Azure AI Foundry, AWS Bedrock, self-hosted) authenticate
@@ -202,7 +202,7 @@ def _is_third_party_anthropic_endpoint(base_url: str | None) -> bool:
     return True  # Any other endpoint is a third-party proxy
 
 
-def _requires_bearer_auth(base_url: str | None) -> bool:
+def _requires_bearer_auth(base_url: Optional[str]) -> bool:
     """Return True for Anthropic-compatible providers that require Bearer auth.
 
     Some third-party /anthropic endpoints implement Anthropic's Messages API but
@@ -216,7 +216,7 @@ def _requires_bearer_auth(base_url: str | None) -> bool:
     return normalized.startswith(("https://api.minimax.io/anthropic", "https://api.minimaxi.com/anthropic"))
 
 
-def _common_betas_for_base_url(base_url: str | None) -> list[str]:
+def _common_betas_for_base_url(base_url: Optional[str]) -> list[str]:
     """Return the beta headers that are safe for the configured endpoint.
 
     MiniMax's Anthropic-compatible endpoints (Bearer-auth) reject requests
@@ -905,7 +905,7 @@ def _convert_content_to_anthropic(content: Any) -> Any:
 
 def convert_messages_to_anthropic(
     messages: List[Dict],
-    base_url: str | None = None,
+    base_url: Optional[str] = None,
 ) -> Tuple[Optional[Any], List[Dict]]:
     """Convert OpenAI-format messages to Anthropic format.
 
@@ -1183,7 +1183,7 @@ def build_anthropic_kwargs(
     is_oauth: bool = False,
     preserve_dots: bool = False,
     context_length: Optional[int] = None,
-    base_url: str | None = None,
+    base_url: Optional[str] = None,
     fast_mode: bool = False,
 ) -> Dict[str, Any]:
     """Build kwargs for anthropic.messages.create().

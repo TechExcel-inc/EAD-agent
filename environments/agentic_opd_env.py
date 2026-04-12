@@ -260,7 +260,7 @@ def _build_hint_judge_messages(
     ]
 
 
-def _parse_hint_result(text: str) -> tuple[int | None, str]:
+def _parse_hint_result(text: str) -> tuple[Optional[int], str]:
     """Parse the judge's boxed decision and hint text."""
     boxed = _BOXED_RE.findall(text)
     score = int(boxed[-1]) if boxed else None
@@ -271,7 +271,7 @@ def _parse_hint_result(text: str) -> tuple[int | None, str]:
     return score, hint
 
 
-def _select_best_hint(votes: list[dict]) -> dict | None:
+def _select_best_hint(votes: list[dict]) -> Optional[dict]:
     """Select the best hint from majority-voted judge results."""
     good = [
         v

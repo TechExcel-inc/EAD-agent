@@ -120,7 +120,7 @@ _OBSERVATION_PRESETS = {
 
 def _resolve_observation(
     mode: str,
-    observation_obj: dict | None,
+    observation_obj: Optional[dict],
 ) -> dict:
     """Resolve per-peer observation booleans.
 
@@ -155,12 +155,12 @@ class HonchoClientConfig:
 
     host: str = HOST
     workspace_id: str = "hermes"
-    api_key: str | None = None
+    api_key: Optional[str] = None
     environment: str = "production"
     # Optional base URL for self-hosted Honcho (overrides environment mapping)
-    base_url: str | None = None
+    base_url: Optional[str] = None
     # Identity
-    peer_name: str | None = None
+    peer_name: Optional[str] = None
     ai_peer: str = "hermes"
     # Toggles
     enabled: bool = False
@@ -169,7 +169,7 @@ class HonchoClientConfig:
     # "session" (flush on session end), or int (every N turns)
     write_frequency: str | int = "async"
     # Prefetch budget
-    context_tokens: int | None = None
+    context_tokens: Optional[int] = None
     # Dialectic (peer.chat) settings
     # reasoning_level: "minimal" | "low" | "medium" | "high" | "max"
     dialectic_reasoning_level: str = "low"
@@ -213,7 +213,7 @@ class HonchoClientConfig:
     def from_env(
         cls,
         workspace_id: str = "hermes",
-        host: str | None = None,
+        host: Optional[str] = None,
     ) -> HonchoClientConfig:
         """Create config from environment variables (fallback)."""
         resolved_host = host or resolve_active_host()
@@ -232,8 +232,8 @@ class HonchoClientConfig:
     @classmethod
     def from_global_config(
         cls,
-        host: str | None = None,
-        config_path: Path | None = None,
+        host: Optional[str] = None,
+        config_path: Optional[Path] = None,
     ) -> HonchoClientConfig:
         """Create config from the resolved Honcho config path.
 
@@ -392,7 +392,7 @@ class HonchoClientConfig:
         )
 
     @staticmethod
-    def _git_repo_name(cwd: str) -> str | None:
+    def _git_repo_name(cwd: str) -> Optional[str]:
         """Return the git repo root directory name, or None if not in a repo."""
         import subprocess
 
@@ -409,10 +409,10 @@ class HonchoClientConfig:
 
     def resolve_session_name(
         self,
-        cwd: str | None = None,
-        session_title: str | None = None,
-        session_id: str | None = None,
-    ) -> str | None:
+        cwd: Optional[str] = None,
+        session_title: Optional[str] = None,
+        session_id: Optional[str] = None,
+    ) -> Optional[str]:
         """Resolve Honcho session name.
 
         Resolution order:

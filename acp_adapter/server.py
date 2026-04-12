@@ -216,7 +216,7 @@ class HermesACPAgent(acp.Agent):
 
     async def initialize(
         self,
-        protocol_version: int | None = None,
+        protocol_version: Optional[int] = None,
         client_capabilities: ClientCapabilities | None = None,
         client_info: Implementation | None = None,
         **kwargs: Any,
@@ -266,7 +266,7 @@ class HermesACPAgent(acp.Agent):
     async def new_session(
         self,
         cwd: str,
-        mcp_servers: list | None = None,
+        mcp_servers: Optional[list] = None,
         **kwargs: Any,
     ) -> NewSessionResponse:
         state = self.session_manager.create_session(cwd=cwd)
@@ -279,7 +279,7 @@ class HermesACPAgent(acp.Agent):
         self,
         cwd: str,
         session_id: str,
-        mcp_servers: list | None = None,
+        mcp_servers: Optional[list] = None,
         **kwargs: Any,
     ) -> LoadSessionResponse | None:
         state = self.session_manager.update_cwd(session_id, cwd)
@@ -295,7 +295,7 @@ class HermesACPAgent(acp.Agent):
         self,
         cwd: str,
         session_id: str,
-        mcp_servers: list | None = None,
+        mcp_servers: Optional[list] = None,
         **kwargs: Any,
     ) -> ResumeSessionResponse:
         state = self.session_manager.update_cwd(session_id, cwd)
@@ -322,7 +322,7 @@ class HermesACPAgent(acp.Agent):
         self,
         cwd: str,
         session_id: str,
-        mcp_servers: list | None = None,
+        mcp_servers: Optional[list] = None,
         **kwargs: Any,
     ) -> ForkSessionResponse:
         state = self.session_manager.fork_session(session_id, cwd=cwd)
@@ -336,8 +336,8 @@ class HermesACPAgent(acp.Agent):
 
     async def list_sessions(
         self,
-        cursor: str | None = None,
-        cwd: str | None = None,
+        cursor: Optional[str] = None,
+        cwd: Optional[str] = None,
         **kwargs: Any,
     ) -> ListSessionsResponse:
         infos = self.session_manager.list_sessions()
@@ -513,7 +513,7 @@ class HermesACPAgent(acp.Agent):
             asyncio.create_task, self._send_available_commands_update(session_id)
         )
 
-    def _handle_slash_command(self, text: str, state: SessionState) -> str | None:
+    def _handle_slash_command(self, text: str, state: SessionState) -> Optional[str]:
         """Dispatch a slash command and return the response text.
 
         Returns ``None`` for unrecognized commands so they fall through

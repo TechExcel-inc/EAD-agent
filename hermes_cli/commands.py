@@ -46,7 +46,7 @@ class CommandDef:
     subcommands: tuple[str, ...] = ()  # tab-completable subcommands
     cli_only: bool = False             # only available in CLI
     gateway_only: bool = False         # only available in gateway/messaging
-    gateway_config_gate: str | None = None  # config dotpath; when truthy, overrides cli_only for gateway
+    gateway_config_gate: Optional[str] = None  # config dotpath; when truthy, overrides cli_only for gateway
 
 
 # ---------------------------------------------------------------------------
@@ -678,7 +678,7 @@ class SlashCommandCompleter(Completer):
         return f"{cmd_name} " if cmd_name == word else cmd_name
 
     @staticmethod
-    def _extract_path_word(text: str) -> str | None:
+    def _extract_path_word(text: str) -> Optional[str]:
         """Extract the current word if it looks like a file path.
 
         Returns the path-like token under the cursor, or None if the
@@ -753,7 +753,7 @@ class SlashCommandCompleter(Completer):
             count += 1
 
     @staticmethod
-    def _extract_context_word(text: str) -> str | None:
+    def _extract_context_word(text: str) -> Optional[str]:
         """Extract a bare ``@`` token for context reference completions."""
         if not text:
             return None

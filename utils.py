@@ -4,7 +4,7 @@ import json
 import os
 import tempfile
 from pathlib import Path
-from typing import Any, Union
+from typing import Any, Union, Optional
 
 import yaml
 
@@ -84,7 +84,7 @@ def atomic_yaml_write(
     *,
     default_flow_style: bool = False,
     sort_keys: bool = False,
-    extra_content: str | None = None,
+    extra_content: Optional[str] = None,
 ) -> None:
     """Write YAML data to a file atomically.
 

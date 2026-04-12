@@ -76,7 +76,7 @@ class HonchoSessionManager:
     def __init__(
         self,
         honcho: Honcho | None = None,
-        context_tokens: int | None = None,
+        context_tokens: Optional[int] = None,
         config: Any | None = None,
     ):
         """
@@ -519,7 +519,7 @@ class HonchoSessionManager:
 
     def dialectic_query(
         self, session_key: str, query: str,
-        reasoning_level: str | None = None,
+        reasoning_level: Optional[str] = None,
         peer: str = "user",
     ) -> str:
         """
@@ -612,7 +612,7 @@ class HonchoSessionManager:
         with self._prefetch_cache_lock:
             return self._dialectic_cache.pop(session_key, "")
 
-    def prefetch_context(self, session_key: str, user_message: str | None = None) -> None:
+    def prefetch_context(self, session_key: str, user_message: Optional[str] = None) -> None:
         """
         Fire get_prefetch_context in a background thread, caching the result.
 
@@ -643,7 +643,7 @@ class HonchoSessionManager:
         with self._prefetch_cache_lock:
             return self._context_cache.pop(session_key, {})
 
-    def get_prefetch_context(self, session_key: str, user_message: str | None = None) -> dict[str, str]:
+    def get_prefetch_context(self, session_key: str, user_message: Optional[str] = None) -> dict[str, str]:
         """
         Pre-fetch user and AI peer context from Honcho.
 
@@ -880,7 +880,7 @@ class HonchoSessionManager:
 
         return []
 
-    def _fetch_peer_context(self, peer_id: str, search_query: str | None = None) -> dict[str, Any]:
+    def _fetch_peer_context(self, peer_id: str, search_query: Optional[str] = None) -> dict[str, Any]:
         """Fetch representation + peer card directly from a peer object."""
         peer = self._get_or_create_peer(peer_id)
         representation = ""

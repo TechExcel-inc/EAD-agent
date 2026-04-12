@@ -281,7 +281,7 @@ class _Client:
 
     # ── Files ─────────────────────────────────────────────────────────────────
 
-    def upload_file(self, data: bytes, filename: str, remote_path: str, mime_type: str, scope: str, project_id: str | None) -> dict:
+    def upload_file(self, data: bytes, filename: str, remote_path: str, mime_type: str, scope: str, project_id: Optional[str]) -> dict:
         import io
         import requests
         url = f"{self.base_url}/v1/files"
@@ -294,7 +294,7 @@ class _Client:
         resp.raise_for_status()
         return resp.json()
 
-    def list_files(self, prefix: str | None = None, limit: int = 50) -> dict:
+    def list_files(self, prefix: Optional[str] = None, limit: int = 50) -> dict:
         params: dict = {"limit": limit}
         if prefix:
             params["prefix"] = prefix
@@ -311,7 +311,7 @@ class _Client:
         resp.raise_for_status()
         return resp.content
 
-    def ingest_file(self, file_id: str, user_id: str | None = None, agent_id: str | None = None) -> dict:
+    def ingest_file(self, file_id: str, user_id: Optional[str] = None, agent_id: Optional[str] = None) -> dict:
         body: dict = {}
         if user_id:
             body["user_id"] = user_id

@@ -223,7 +223,7 @@ class HindsightMemoryProvider(MemoryProvider):
 
         # Bank
         self._bank_mission = ""
-        self._bank_retain_mission: str | None = None
+        self._bank_retain_mission: Optional[str] = None
         self._retain_async = True
 
     @property

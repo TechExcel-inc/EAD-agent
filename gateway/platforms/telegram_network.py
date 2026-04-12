@@ -44,7 +44,7 @@ _DOH_PROVIDERS: list[dict] = [
 _SEED_FALLBACK_IPS: list[str] = ["149.154.167.220"]
 
 
-def _resolve_proxy_url() -> str | None:
+def _resolve_proxy_url() -> Optional[str]:
     # Delegate to shared implementation (env vars + macOS system proxy detection)
     from gateway.platforms.base import resolve_proxy_url
     return resolve_proxy_url()
@@ -141,7 +141,7 @@ def _normalize_fallback_ips(values: Iterable[str]) -> list[str]:
     return normalized
 
 
-def parse_fallback_ip_env(value: str | None) -> list[str]:
+def parse_fallback_ip_env(value: Optional[str]) -> list[str]:
     if not value:
         return []
     parts = [part.strip() for part in value.split(",")]

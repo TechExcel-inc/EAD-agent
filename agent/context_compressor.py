@@ -72,7 +72,7 @@ class ContextCompressor:
         summary_model_override: str = None,
         base_url: str = "",
         api_key: str = "",
-        config_context_length: int | None = None,
+        config_context_length: Optional[int] = None,
         provider: str = "",
     ):
         self.model = model
@@ -137,7 +137,7 @@ class ContextCompressor:
 
     def _prune_old_tool_results(
         self, messages: List[Dict[str, Any]], protect_tail_count: int,
-        protect_tail_tokens: int | None = None,
+        protect_tail_tokens: Optional[int] = None,
     ) -> tuple[List[Dict[str, Any]], int]:
         """Replace old tool result contents with a short placeholder.
 
@@ -532,7 +532,7 @@ Write only the summary body. Do not include any preamble or prefix."""
 
     def _find_tail_cut_by_tokens(
         self, messages: List[Dict[str, Any]], head_end: int,
-        token_budget: int | None = None,
+        token_budget: Optional[int] = None,
     ) -> int:
         """Walk backward from the end of messages, accumulating tokens until
         the budget is reached. Returns the index where the tail starts.

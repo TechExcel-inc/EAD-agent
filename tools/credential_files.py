@@ -245,7 +245,7 @@ def get_skills_directory_mount(
     return mounts
 
 
-_safe_skills_tempdir: Path | None = None
+_safe_skills_tempdir: Optional[Path] = None
 
 
 def _safe_skills_path(skills_dir: Path) -> str:

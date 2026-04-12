@@ -58,7 +58,7 @@ def _get_custom_provider_names() -> list:
     return result
 
 
-def _resolve_custom_provider_input(raw: str) -> str | None:
+def _resolve_custom_provider_input(raw: str) -> Optional[str]:
     """If raw input matches a custom_providers entry name (case-insensitive), return its pool key."""
     normalized = (raw or "").strip().lower().replace(" ", "-")
     if not normalized:

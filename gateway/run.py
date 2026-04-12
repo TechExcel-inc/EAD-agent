@@ -336,7 +336,7 @@ def _build_media_placeholder(event) -> str:
     return "\n".join(parts)
 
 
-def _dequeue_pending_text(adapter, session_key: str) -> str | None:
+def _dequeue_pending_text(adapter, session_key: str) -> Optional[str]:
     """Consume and return the text of a pending queued message.
 
     Preserves media context for captionless photo/document events by
@@ -351,7 +351,7 @@ def _dequeue_pending_text(adapter, session_key: str) -> str | None:
     return text
 
 
-def _check_unavailable_skill(command_name: str) -> str | None:
+def _check_unavailable_skill(command_name: str) -> Optional[str]:
     """Check if a command matches a known-but-inactive skill.
 
     Returns a helpful message if the skill exists but is disabled or only
@@ -417,7 +417,7 @@ def _load_gateway_config() -> dict:
     return {}
 
 
-def _resolve_gateway_model(config: dict | None = None) -> str:
+def _resolve_gateway_model(config: Optional[dict] = None) -> str:
     """Read model from config.yaml — single source of truth.
 
     Without this, temporary AIAgent instances (memory flush, /compress) fall
@@ -930,7 +930,7 @@ class GatewayRunner:
         return ""
 
     @staticmethod
-    def _load_reasoning_config() -> dict | None:
+    def _load_reasoning_config() -> Optional[dict]:
         """Load reasoning effort from config.yaml.
 
         Reads agent.reasoning_effort from config.yaml. Valid: "none",
@@ -954,7 +954,7 @@ class GatewayRunner:
         return result
 
     @staticmethod
-    def _load_service_tier() -> str | None:
+    def _load_service_tier() -> Optional[str]:
         """Load Priority Processing setting from config.yaml.
 
         Reads agent.service_tier from config.yaml. Accepted values mirror the CLI:
@@ -1044,7 +1044,7 @@ class GatewayRunner:
         return {}
 
     @staticmethod
-    def _load_fallback_model() -> list | dict | None:
+    def _load_fallback_model() -> list | Optional[dict]:
         """Load fallback provider chain from config.yaml.
 
         Returns a list of provider dicts (``fallback_providers``), a single

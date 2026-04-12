@@ -56,7 +56,7 @@ from tools.interrupt import is_interrupted, _interrupt_event  # noqa: F401 — r
 # display_hermes_home imported lazily at call site (stale-module safety during hermes update)
 
 
-def ensure_minisweagent_on_path(_repo_root: Path | None = None) -> None:
+def ensure_minisweagent_on_path(_repo_root: Optional[Path] = None) -> None:
     """Backward-compatible no-op after minisweagent_path.py removal."""
     return
 
@@ -157,7 +157,7 @@ def _check_all_guards(command: str, env_type: str) -> dict:
 _WORKDIR_SAFE_RE = re.compile(r'^[A-Za-z0-9/_\-.~ +@=,]+$')
 
 
-def _validate_workdir(workdir: str) -> str | None:
+def _validate_workdir(workdir: str) -> Optional[str]:
     """Reject workdir values that don't look like a filesystem path.
 
     Uses an allowlist of safe characters rather than a deny-list, so novel
@@ -445,7 +445,7 @@ def _rewrite_real_sudo_invocations(command: str) -> tuple[str, bool]:
     return "".join(out), found
 
 
-def _transform_sudo_command(command: str | None) -> tuple[str | None, str | None]:
+def _transform_sudo_command(command: Optional[str]) -> tuple[Optional[str], Optional[str]]:
     """
     Transform sudo commands to use -S flag if SUDO_PASSWORD is available.
 
@@ -1051,7 +1051,7 @@ atexit.register(_atexit_cleanup)
 # wastes a turn investigating something that just means "no matches".
 # This lookup adds a human-readable note so the agent can move on.
 
-def _interpret_exit_code(command: str, exit_code: int) -> str | None:
+def _interpret_exit_code(command: str, exit_code: int) -> Optional[str]:
     """Return a human-readable note when a non-zero exit code is non-erroneous.
 
     Returns None when the exit code is 0 or genuinely signals an error.
