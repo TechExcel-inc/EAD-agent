@@ -208,6 +208,10 @@ class ProjectExecute(BaseModel):
     invalid_for_data_reporting_training_reason: Optional[str] = None
     # When this run was seeded from another execution's PFM artifacts / chat cache.
     inherited_from_execution_id: Optional[str] = None
+    # Deferred bootstrap (POST /executions/run returns before seed/session complete).
+    bootstrap_pending: bool = False
+    bootstrap_inherit_pfm: bool = True
+    bootstrap_explicit_inherit_from_execution_id: Optional[str] = None
 
 
 class ProjectsStoreFile(BaseModel):

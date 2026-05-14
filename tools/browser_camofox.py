@@ -27,6 +27,7 @@ import json
 import logging
 import os
 import threading
+import time
 import uuid
 from typing import Any, Dict, Optional
 
@@ -257,6 +258,21 @@ def camofox_navigate(url: str, task_id: Optional[str] = None) -> str:
                 "Share this link with the user so they can watch the browser live."
             )
 
+        from tools.browser_tool import (
+            SNAPSHOT_SUMMARIZE_THRESHOLD,
+            _post_navigate_settle_seconds,
+            _truncate_snapshot,
+        )
+
+        settle_s = _post_navigate_settle_seconds()
+        if settle_s > 0:
+            logger.debug(
+                "camofox_navigate post-nav settle %.2fs before snapshot (task=%s)",
+                settle_s,
+                task_id,
+            )
+            time.sleep(settle_s)
+
         # Auto-take a compact snapshot so the model can act immediately
         try:
             snap_data = _get(
@@ -264,10 +280,6 @@ def camofox_navigate(url: str, task_id: Optional[str] = None) -> str:
                 params={"userId": session["user_id"]},
             )
             snapshot_text = snap_data.get("snapshot", "")
-            from tools.browser_tool import (
-                SNAPSHOT_SUMMARIZE_THRESHOLD,
-                _truncate_snapshot,
-            )
             if len(snapshot_text) > SNAPSHOT_SUMMARIZE_THRESHOLD:
                 snapshot_text = _truncate_snapshot(snapshot_text)
             result["snapshot"] = snapshot_text

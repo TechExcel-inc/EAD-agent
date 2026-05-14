@@ -35,6 +35,9 @@ Environment Variables:
   requires paid plan (default: "true")
 - BROWSERBASE_SESSION_TIMEOUT: Custom session timeout in milliseconds. Set to extend
   beyond project default. Common values: 600000 (10min), 1800000 (30min) (default: none)
+- BROWSER_POST_NAVIGATE_SETTLE_SECONDS: After a successful ``open``/navigate, sleep this
+  many seconds before the automatic accessibility snapshot (helps SPAs paint). Default
+  ``3``. Set to ``0`` to disable. Values are clamped to ``[0, 60]``.
 
 Usage:
     from tools.browser_tool import browser_navigate, browser_snapshot, browser_click
@@ -92,6 +95,17 @@ except ImportError:
     _is_camofox_mode = lambda: False  # noqa: E731
 
 logger = logging.getLogger(__name__)
+
+
+def _post_navigate_settle_seconds() -> float:
+    """Seconds to wait after navigation before auto-snapshot (SPA paint buffer)."""
+    raw = os.getenv("BROWSER_POST_NAVIGATE_SETTLE_SECONDS", "3").strip()
+    try:
+        v = float(raw)
+    except ValueError:
+        v = 3.0
+    return max(0.0, min(v, 60.0))
+
 
 # Standard PATH entries for environments with minimal PATH (e.g. systemd services).
 # Includes macOS Homebrew paths (/opt/homebrew/* for Apple Silicon).
@@ -1314,6 +1328,16 @@ def browser_navigate(url: str, task_id: Optional[str] = None) -> str:
                     "error": "Blocked: redirect landed on a private/internal address",
                 }
             )
+
+        settle_s = _post_navigate_settle_seconds()
+        if settle_s > 0:
+            logger.debug(
+                "browser_navigate post-open settle %.2fs before snapshot (task=%s url=%s)",
+                settle_s,
+                effective_task_id,
+                (final_url or "")[:120],
+            )
+            time.sleep(settle_s)
 
         response = {"success": True, "url": final_url, "title": title}
 

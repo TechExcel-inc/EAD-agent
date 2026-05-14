@@ -554,6 +554,23 @@ class ProjectHandlers:
         self._store = store or ProjectStore()
         self._executor = executor
 
+    def _schedule_execution_bootstrap(self, execution_id: str) -> None:
+        from projects.run_bootstrap import run_execution_bootstrap
+
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            logger.error("[projects] No running event loop; cannot bootstrap execution %s", execution_id)
+            self._store.update_execution(
+                execution_id,
+                status=ExecutionStatus.FAILED,
+                last_error_message="Internal error: no event loop for deferred run bootstrap.",
+                executor_hint="AI Failed",
+                bootstrap_pending=False,
+            )
+            return
+        loop.create_task(run_execution_bootstrap(self._store, self._executor, execution_id))
+
     # ------------------------------------------------------------------
     # Template endpoints
     # ------------------------------------------------------------------
@@ -758,133 +775,30 @@ class ProjectHandlers:
             invalid_for_data_reporting_training_reason=learning_meta[
                 "invalid_for_data_reporting_training_reason"
             ],
+            executor_hint="Preparing run (PFM inheritance, artifacts, and chat session)…",
+            bootstrap_pending=True,
+            bootstrap_inherit_pfm=inherit_pfm,
+            bootstrap_explicit_inherit_from_execution_id=(
+                explicit_source_id if inherit_pfm and explicit_source_id else None
+            ),
         )
 
         created = self._store.create_execution(execution)
-        inherited_source_id: Optional[str] = None
-
-        if inherit_pfm:
-            src = resolved_inherit_source
-            if not src:
-                src = self._store.resolve_pfm_inheritance_source(
-                    template.id,
-                    exclude_execution_id=created.id,
-                    explicit_source_id=None,
-                )
-            if src:
-                inherited_source_id = src.id
-                try:
-                    seeded_run = self._store.seed_execution_from_prior_run(created.id, src.id)
-                    if seeded_run:
-                        created = seeded_run
-                except Exception as exc:
-                    logger.exception(
-                        "[projects] seed_execution_from_prior_run failed (exec=%s from=%s): %s",
-                        created.id,
-                        src.id,
-                        exc,
-                    )
-                    try:
-                        seeded_fallback = self._store.seed_execution_from_template_artifacts(created.id)
-                        if seeded_fallback:
-                            created = seeded_fallback
-                    except Exception as exc2:
-                        logger.exception(
-                            "[projects] Template artifact fallback seed also failed: %s", exc2
-                        )
-            else:
-                seeded = self._store.seed_execution_from_template_artifacts(created.id)
-                if seeded:
-                    created = seeded
-        else:
-            seeded = self._store.seed_execution_from_template_artifacts(created.id)
-            if seeded:
-                created = seeded
 
         logger.info(
-            "[projects] Created execution %s for template %s (inherit_pfm=%s inherited_from=%s)",
+            "[projects] Created execution %s for template %s (inherit_pfm=%s); deferred bootstrap",
             created.id,
             template.id,
             inherit_pfm,
-            inherited_source_id,
         )
 
-        try:
-            self._store.sync_execution_pfm_artifacts_from_state(created.id)
-            refreshed_ex = self._store.get_execution(created.id)
-            if refreshed_ex:
-                created = refreshed_ex
-        except Exception as exc:
-            logger.warning(
-                "[projects] sync_execution_pfm_artifacts_from_state failed for %s: %s",
+        if self._executor:
+            self._schedule_execution_bootstrap(created.id)
+        else:
+            logger.error(
+                "[projects] ProjectExecutor not wired; execution %s will not start automatically",
                 created.id,
-                exc,
             )
-
-        session_key = f"eadproj-exec-{created.id}"
-        session_bootstrap_ok = False
-        try:
-            from hermes_state import SessionDB
-
-            db = SessionDB()
-            session_id = f"eadproj-{uuid.uuid4().hex[:12]}"
-            boundary_message = _execution_boundary_message(created)
-            db.create_session(
-                session_id=session_id,
-                source="api_server",
-                system_prompt=boundary_message,
-            )
-            db.set_session_title(session_id, session_key)
-            db.append_message(
-                session_id=session_id,
-                role="system",
-                content=boundary_message,
-            )
-            phase1_snap = _build_phase1_canonical_baseline_message(self._store, created)
-            if phase1_snap:
-                db.append_message(
-                    session_id=session_id,
-                    role="system",
-                    content=phase1_snap,
-                )
-                logger.info(
-                    "[projects] Phase-1 canonical PFM baseline injected for execution %s", created.id
-                )
-            inh = getattr(created, "inherited_from_execution_id", None)
-            if inh and _try_inject_inherited_pfm_mindmap_cache(session_id, session_key, str(inh)):
-                logger.info("[projects] Injected UI mindmap cache from prior execution %s", inh)
-
-            db.append_message(
-                session_id=session_id,
-                role="assistant",
-                content=_execution_ack_message(created),
-            )
-            logger.info(
-                "[projects] Bootstrapped session %s for execution %s", session_id, created.id
-            )
-
-            self._store.update_execution(created.id, run_session_key=session_key)
-            session_bootstrap_ok = True
-        except Exception as e:
-            logger.warning(
-                "[projects] Session bootstrap failed for execution %s: %s", created.id, e
-            )
-            updated = self._store.update_execution(
-                created.id,
-                status=ExecutionStatus.FAILED,
-                last_error_message=f"Run session bootstrap failed: {str(e)[:180]}",
-                executor_hint="AI Failed",
-            )
-            if updated:
-                created = updated
-
-        if self._executor and session_bootstrap_ok:
-            try:
-                loop = asyncio.get_running_loop()
-                loop.create_task(self._executor.start_execution(created.id))
-                logger.info("[projects] Executor started for execution %s", created.id)
-            except Exception as e:
-                logger.error("[projects] Failed to start executor for %s: %s", created.id, e)
 
         raw = json.loads(created.model_dump_json())
         return _json_response(_to_camel_dict(raw), status=201)
@@ -1096,6 +1010,19 @@ class ProjectHandlers:
             }
         )
 
+    async def handle_post_pfm_request_snapshot(self, request: "web.Request") -> "web.Response":
+        """Ask the run's agent to commit an updated PFM tree (commit_pfm_snapshot)."""
+        execution_id = request.match_info["execution_id"]
+        execution = self._store.get_execution(execution_id)
+        if not execution:
+            return _error_response(f"Execution {execution_id} not found", 404, "not_found")
+        if not self._executor:
+            return _error_response("Project executor is not available", 503, "unavailable")
+        result = self._executor.request_pfm_snapshot_refresh(execution_id)
+        raw = dict(result)
+        raw["execution_id"] = execution_id
+        return _json_response(_to_camel_dict(raw))
+
     async def handle_get_pfm_mindmap(self, request: "web.Request") -> "web.Response":
         from .pfm_tree import render_mermaid_for_scope
 
@@ -1272,6 +1199,10 @@ class ProjectHandlers:
         app.router.add_get(
             "/v1/projects/executions/{execution_id}/pfm/tree",
             self.handle_get_pfm_tree,
+        )
+        app.router.add_post(
+            "/v1/projects/executions/{execution_id}/pfm/request-snapshot",
+            self.handle_post_pfm_request_snapshot,
         )
         app.router.add_get(
             "/v1/projects/executions/{execution_id}/pfm/mindmap",

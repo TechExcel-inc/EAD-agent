@@ -64,6 +64,9 @@ else:
     except ValueError:
         _PFM_PERIODIC_SYNC_S = 0.0
 
+# Minimum seconds between UI-triggered PFM snapshot nudges for the same execution.
+_PFM_REFRESH_NUDGE_MIN_INTERVAL_S = 4.0
+
 _LOGIN_PHASE_PROMPT = (
     "LOGIN PHASE (MANDATORY, FIRST):\n"
     "1) Your first objective is successful login only. Do NOT start PFM discovery yet.\n"
@@ -371,8 +374,76 @@ class ProjectExecutor:
         self._last_progress_seq_seen: Dict[str, int] = {}
         self._last_progress_activity_ts: Dict[str, float] = {}
         self._last_pfm_periodic_ts: Dict[str, float] = {}
+        self._pfm_refresh_nudge_ts: Dict[str, float] = {}
+
+    def request_pfm_snapshot_refresh(self, execution_id: str) -> Dict[str, object]:
+        """Ask the session agent (async) to call commit_pfm_snapshot for the mindmap UI."""
+        execution = self._store.get_execution(execution_id)
+        if not execution:
+            return {"ok": False, "code": "not_found"}
+        if execution.status not in (ExecutionStatus.RUNNING, ExecutionStatus.PENDING):
+            return {
+                "ok": False,
+                "code": "execution_not_active",
+                "message": "Snapshot refresh is only available while the run is pending or running.",
+            }
+        if execution.bootstrap_pending:
+            return {
+                "ok": False,
+                "code": "bootstrap_pending",
+                "message": "Run is still preparing; try again after the agent session starts.",
+            }
+        sk = (execution.run_session_key or "").strip()
+        if not sk:
+            return {
+                "ok": False,
+                "code": "no_session",
+                "message": "Run session is not ready yet; try again shortly.",
+            }
+        if self._pool.is_agent_active(sk):
+            return {
+                "ok": False,
+                "code": "agent_busy",
+                "message": "Agent is processing another turn; try Refresh again in a few seconds.",
+            }
+        now = time.time()
+        last = self._pfm_refresh_nudge_ts.get(execution_id, 0.0)
+        if now - last < _PFM_REFRESH_NUDGE_MIN_INTERVAL_S:
+            retry_after = round(_PFM_REFRESH_NUDGE_MIN_INTERVAL_S - (now - last), 1)
+            return {
+                "ok": True,
+                "code": "throttled",
+                "message": "A refresh was requested moments ago; wait before retrying.",
+                "retry_after_s": retry_after,
+            }
+        self._pfm_refresh_nudge_ts[execution_id] = now
+        boundary = self._project_boundary_prompt(execution)
+        user_message = (
+            "[Operator UI — Refresh PFM mindmap] Call commit_pfm_snapshot now for this execution "
+            f"({execution_id}). Publish the full current PFM tree plus node_reports. "
+            "Set `version` strictly higher than the latest committed snapshot for this run. "
+            "Reply with a one-line confirmation when done."
+        )
+        run_id = self._pool.send_message_async(
+            session_key=sk,
+            user_message=user_message,
+            ephemeral_system_prompt=boundary,
+            enable_tools=True,
+        )
+        logger.info(
+            "[executor] Queued PFM snapshot refresh for execution %s (async run %s)",
+            execution_id,
+            run_id,
+        )
+        return {"ok": True, "code": "queued", "run_id": run_id}
 
     async def start_execution(self, execution_id: str) -> None:
+        if self.has_active_monitor(execution_id):
+            logger.info(
+                "[executor] start_execution skipped: monitor already active for %s",
+                execution_id,
+            )
+            return
         execution = self._store.get_execution(execution_id)
         if not execution:
             logger.error("[executor] Execution %s not found", execution_id)
@@ -404,10 +475,30 @@ class ProjectExecutor:
         self._running[execution_id] = task
         logger.info("[executor] Started monitoring execution %s", execution_id)
 
+    def has_active_monitor(self, execution_id: str) -> bool:
+        task = self._running.get(execution_id)
+        return task is not None and not task.done()
+
     async def resume_active_executions(self) -> None:
         """Reattach monitor loops for running/pending executions after process restart."""
+        from projects.run_bootstrap import run_execution_bootstrap
+
         for execution in self._store.get_active_executions():
             execution_id = execution.id
+            pending = execution.status == ExecutionStatus.PENDING
+            has_key = bool((execution.run_session_key or "").strip())
+
+            if pending and not has_key:
+                asyncio.create_task(run_execution_bootstrap(self._store, self, execution_id))
+                logger.info("[projects] Resumed deferred bootstrap task for %s", execution_id)
+                continue
+
+            if pending and has_key:
+                if not self.has_active_monitor(execution_id):
+                    asyncio.create_task(self.start_execution(execution_id))
+                    logger.info("[projects] Resumed start_execution for pending run %s", execution_id)
+                continue
+
             existing = self._running.get(execution_id)
             if existing and not existing.done():
                 continue
