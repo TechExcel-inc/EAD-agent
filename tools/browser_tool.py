@@ -37,8 +37,7 @@ Environment Variables:
   beyond project default. Common values: 600000 (10min), 1800000 (30min) (default: none)
 - BROWSER_POST_NAVIGATE_SETTLE_SECONDS: After a successful ``open``/navigate, sleep this
   many seconds before the automatic accessibility snapshot (helps SPAs paint). Default
-  ``0`` (no extra delay). Increase (e.g. ``1``–``3``) if snapshots look empty on slow SPAs.
-  Values are clamped to ``[0, 60]``.
+  ``2``. Set ``0`` for maximum responsiveness. Values are clamped to ``[0, 60]``.
 
 Usage:
     from tools.browser_tool import browser_navigate, browser_snapshot, browser_click
@@ -101,14 +100,14 @@ logger = logging.getLogger(__name__)
 def _post_navigate_settle_seconds() -> float:
     """Seconds to wait after navigation before auto-snapshot (SPA paint buffer).
 
-    Default is 0 so exploration stays responsive; set BROWSER_POST_NAVIGATE_SETTLE_SECONDS
-    when a target app needs extra time before the accessibility snapshot.
+    Default is 2 seconds before the post-open auto-snapshot. Override with
+    BROWSER_POST_NAVIGATE_SETTLE_SECONDS (e.g. ``0`` for faster exploration).
     """
-    raw = os.getenv("BROWSER_POST_NAVIGATE_SETTLE_SECONDS", "0").strip()
+    raw = os.getenv("BROWSER_POST_NAVIGATE_SETTLE_SECONDS", "2").strip()
     try:
         v = float(raw)
     except ValueError:
-        v = 0.0
+        v = 2.0
     return max(0.0, min(v, 60.0))
 
 

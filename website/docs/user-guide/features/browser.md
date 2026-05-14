@@ -35,8 +35,9 @@ Key capabilities:
 
 After each successful navigate, the browser tool can optionally **wait** before taking the automatic accessibility snapshot. That wait is controlled by the environment variable **`BROWSER_POST_NAVIGATE_SETTLE_SECONDS`** (seconds, clamped to 0–60).
 
-- **Default:** `0` — no extra delay, so multi-step exploration stays responsive.
-- **When to raise it:** If snapshots often look empty or stale on slow client-rendered apps, set `1`, `2`, or `3` in the agent/gateway environment (for example in `~/.hermes/.env` or your process supervisor config).
+- **Default:** `2` — a short pause so SPAs and dynamic UIs are more likely to be painted before the automatic snapshot.
+- **When to lower it:** Set `0` or `0.5` in the agent/gateway environment if exploration feels too slow and snapshots look fine without the wait.
+- **When to raise it:** If snapshots still look empty or stale, try `3`–`5` (for example in `~/.hermes/.env` or your process supervisor config).
 
 Higher values improve “settled” captures at the cost of **every** navigation taking longer, because the sleep runs inside the same tool call as `open` + auto-snapshot.
 
